@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sindhi Students Council
 
 Welcome to the official repository of the **Sindhi Students Council** at NFC IET Multan. This project is a comprehensive web platform designed to empower Sindhi students by providing admission guidance, resources, and a vibrant community network.
@@ -55,3 +56,6 @@ Welcome to the official repository of the **Sindhi Students Council** at NFC IET
    ```bash
    git clone https://github.com/your-username/sindhi-students-council.git
    cd sindhi-students-council
+=======
+# sindhi-students-council.github.io
+>>>>>>> 4eed964717358d4e13b8f70e1ff90073e0966ee2
