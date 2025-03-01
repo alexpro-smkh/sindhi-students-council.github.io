@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Directory - Sindhi Students Council</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <!-- Add Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Add Animate.css for Animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Add Chart.js for Interactive Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add GSAP for Advanced Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <button id="dark-mode-toggle" aria-label="Toggle Dark Mode">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="header-content">
+            <img src="images/logo.png" alt="Sindhi Students Council Logo" class="logo">
+            <h1>Student Directory</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="admission.html"><i class="fas fa-graduation-cap"></i> Admission</a></li>
+                    <li><a href="directory.html" class="active"><i class="fas fa-users"></i> Directory</a></li>
+                    <li><a href="events.html"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                    <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Search and Filters Section -->
+        <section class="search-filters animate__animated animate__fadeInUp">
+            <h2>Find Sindhi Students at NFC IET Multan</h2>
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Search by name, program, or contact...">
+                <select id="programFilter">
+                    <option value="">All Programs</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Electrical Engineering">Electrical Engineering</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                </select>
+                <button id="exportCSV" class="cta-button">Export as CSV</button>
+            </div>
+        </section>
+
+        <!-- Student Directory Table -->
+        <section class="student-directory animate__animated animate__fadeInUp">
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Name <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(1)">Program <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(2)">Contact <i class="fas fa-sort"></i></th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    <!-- Student data will be dynamically populated here -->
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button id="prevPage" disabled>Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage" disabled>Next</button>
+            </div>
+        </section>
+
+        <!-- Interactive Chart Section -->
+        <section class="chart-section animate__animated animate__fadeInUp">
+            <h2>Student Distribution by Program</h2>
+            <canvas id="studentChart"></canvas>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 Sindhi Students Council. All rights reserved.</p>
+            <div class="social-links">
+                <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const body = document.body;
+
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            darkModeToggle.querySelector('i').classList.toggle('fa-sun');
+            darkModeToggle.querySelector('i').classList.toggle('fa-moon');
+        });
+
+        // Student Data
+        const students = [
+            { name: "Ali Khan", program: "Computer Science", contact: "ali.khan@example.com" },
+            { name: "Sana Ahmed", program: "Electrical Engineering", contact: "sana.ahmed@example.com" },
+            { name: "Zainab Ali", program: "Mechanical Engineering", contact: "zainab.ali@example.com" },
+            { name: "Ahmed Raza", program: "Civil Engineering", contact: "ahmed.raza@example.com" },
+            { name: "Fatima Khan", program: "Software Engineering", contact: "fatima.khan@example.com" },
+            { name: "Bilal Ahmed", program: "Computer Science", contact: "bilal.ahmed@example.com" },
+            { name: "Hina Shah", program: "Electrical Engineering", contact: "hina.shah@example.com" },
+            { name: "Usman Ali", program: "Mechanical Engineering", contact: "usman.ali@example.com" },
+            { name: "Sadia Khan", program: "Civil Engineering", contact: "sadia.khan@example.com" },
+            { name: "Faisal Ahmed", program: "Software Engineering", contact: "faisal.ahmed@example.com" },
+        ];
+
+        // Pagination Variables
+        const rowsPerPage = 5;
+        let currentPage = 1;
+
+        // Populate Table with Student Data
+        const studentTableBody = document.getElementById('studentTableBody');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const searchInput = document.getElementById('searchInput');
+        const programFilter = document.getElementById('programFilter');
+
+        function renderTable(page, filteredStudents = students) {
+            studentTableBody.innerHTML = '';
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedStudents = filteredStudents.slice(start, end);
+
+            paginatedStudents.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.program}</td>
+                    <td>${student.contact}</td>
+                `;
+                studentTableBody.appendChild(row);
+            });
+
+            // Update Pagination Buttons
+            prevPageButton.disabled = page === 1;
+            nextPageButton.disabled = page === Math.ceil(filteredStudents.length / rowsPerPage);
+            pageInfo.textContent = `Page ${page} of ${Math.ceil(filteredStudents.length / rowsPerPage)}`;
+        }
+
+        // Initial Render
+        renderTable(currentPage);
+
+        // Pagination Event Listeners
+        prevPageButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable(currentPage, getFilteredStudents());
+            }
+        });
+
+        nextPageButton.addEventListener('click', () => {
+            if (currentPage < Math.ceil(getFilteredStudents().length / rowsPerPage)) {
+                currentPage++;
+                renderTable(currentPage, getFilteredStudents());
+            }
+        });
+
+        // Search and Filter Functionality
+        searchInput.addEventListener('input', () => {
+            currentPage = 1;
+            renderTable(currentPage, getFilteredStudents());
+        });
+
+        programFilter.addEventListener('change', () => {
+            currentPage = 1;
+            renderTable(currentPage, getFilteredStudents());
+        });
+
+        function getFilteredStudents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const program = programFilter.value;
+
+            return students.filter(student =>
+                (student.name.toLowerCase().includes(searchTerm) ||
+                student.program.toLowerCase().includes(searchTerm) ||
+                student.contact.toLowerCase().includes(searchTerm)
+            ) && (program === "" || student.program === program);
+        }
+
+        // Sort Functionality
+        function sortTable(columnIndex) {
+            const sortOrder = students[0].sortOrder || 'asc';
+            students.sort((a, b) => {
+                const keyA = Object.values(a)[columnIndex].toLowerCase();
+                const keyB = Object.values(b)[columnIndex].toLowerCase();
+                if (sortOrder === 'asc') {
+                    return keyA > keyB ? 1 : -1;
+                } else {
+                    return keyA < keyB ? 1 : -1;
+                }
+            });
+            students[0].sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            renderTable(currentPage, getFilteredStudents());
+        }
+
+        // Export as CSV
+        const exportCSVButton = document.getElementById('exportCSV');
+        exportCSVButton.addEventListener('click', () => {
+            const filteredStudents = getFilteredStudents();
+            const csvContent = "data:text/csv;charset=utf-8," +
+                filteredStudents.map(student => Object.values(student).join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "student_directory.csv");
+            document.body.appendChild(link);
+            link.click();
+        });
+
+        // Interactive Chart
+        const ctx = document.getElementById('studentChart').getContext('2d');
+        const programCounts = students.reduce((acc, student) => {
+            acc[student.program] = (acc[student.program] || 0) + 1;
+            return acc;
+        }, {});
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(programCounts),
+                datasets: [{
+                    label: 'Number of Students',
+                    data: Object.values(programCounts),
+                    backgroundColor: '#4CAF50',
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                    }
+                }
+            }
+        });
+
+        // GSAP Animations
+        gsap.from('.animate__animated', {
+            opacity: 0,
+            y: 50,
+            duration: 1,
+            delay: 0.5,
+        });
+    </script>
+</body>
+</html>
